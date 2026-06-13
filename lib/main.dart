@@ -155,7 +155,7 @@ class _HomePageState extends State<HomePage> {
   // Change this once you add auth/profile (Step 8)
   final String _userName = 'Yashasvi';
 
-  String _fromLang = 'Select language';
+  String _fromLang = 'Auto Detect'; // always auto, user cannot change this
   String _toLang = 'Select language';
   String _inputText = '';
   String _outputText = '';
@@ -171,14 +171,13 @@ class _HomePageState extends State<HomePage> {
     {'pair': 'FR → EN', 'text': 'Bonjour'},
   ];
 
-  void _swapLanguages() {
+  void _clearAll() {
     setState(() {
-      final tmp = _fromLang;
-      _fromLang = _toLang;
-      _toLang = tmp;
+      _toLang = 'Select language';
       _inputCtrl.clear();
       _inputText = '';
       _outputText = '';
+      _errorMessage = '';
     });
   }
 
@@ -186,9 +185,11 @@ class _HomePageState extends State<HomePage> {
     // Guard: nothing typed
     if (_inputText.trim().isEmpty) return;
 
-    // Guard: language not selected
-    if (_fromLang == 'Select language' || _toLang == 'Select language') {
-      setState(() => _errorMessage = 'Please select both languages first.');
+    // Guard: output language not selected
+    if (_toLang == 'Select language') {
+      setState(
+        () => _errorMessage = 'Please select a language to translate to.',
+      );
       return;
     }
 
@@ -217,7 +218,9 @@ class _HomePageState extends State<HomePage> {
         _errorMessage = '';
 
         // Add to recent list (keep max 10, most recent first)
-        final fromCode = _fromLang.substring(0, 2).toUpperCase();
+        final fromCode = _fromLang == 'Auto Detect'
+            ? 'AUTO'
+            : _fromLang.substring(0, 2).toUpperCase();
         final toCode = _toLang.substring(0, 2).toUpperCase();
         _recent.insert(0, {'pair': '$fromCode → $toCode', 'text': _inputText});
         if (_recent.length > 10) _recent.removeLast();
@@ -313,26 +316,25 @@ class _HomePageState extends State<HomePage> {
   Widget _buildLanguageRow() {
     return Row(
       children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () => _pickLanguage(isFrom: true),
-            child: _langChip(_fromLang),
+        // ── Left chip: Auto Detect (not tappable, just a display) ──────────
+        Expanded(child: _autoDetectChip()),
+        const SizedBox(width: 8),
+        // ── Arrow icon (not a swap button anymore, just visual) ─────────────
+        Container(
+          width: 38,
+          height: 38,
+          decoration: const BoxDecoration(
+            color: kSurface,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.arrow_forward_rounded,
+            color: kAccent,
+            size: 18,
           ),
         ),
         const SizedBox(width: 8),
-        GestureDetector(
-          onTap: _swapLanguages,
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: const BoxDecoration(
-              color: kAccent,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.swap_horiz_rounded, color: kBg, size: 20),
-          ),
-        ),
-        const SizedBox(width: 8),
+        // ── Right chip: tappable, user picks output language ─────────────────
         Expanded(
           child: GestureDetector(
             onTap: () => _pickLanguage(isFrom: false),
@@ -340,6 +342,35 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
+    );
+  }
+
+  // Static auto-detect display chip (no arrow, no tap)
+  Widget _autoDetectChip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: kSurface, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.auto_fix_high_rounded, color: kAccent, size: 14),
+          const SizedBox(width: 6),
+          const Expanded(
+            child: Text(
+              'Auto Detect',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: kAccent,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
