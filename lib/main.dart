@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'screens/language_selector_screen.dart';
 import 'services/translation_service.dart';
 
@@ -164,6 +165,11 @@ class _HomePageState extends State<HomePage> {
 
   final TextEditingController _inputCtrl = TextEditingController();
 
+  // ── Voice input state ─────────────────────────────────────────────────────
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+  bool _speechAvailable = false;
+
   // Recent translations — will be replaced with storage in Step 6
   final List<Map<String, String>> _recent = [
     {'pair': 'EN → TA', 'text': 'Hello world'},
@@ -229,8 +235,72 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  // Initialize speech recognizer once when page loads
+  Future<void> _initSpeech() async {
+    _speechAvailable = await _speech.initialize(
+      onError: (error) {
+        setState(() => _isListening = false);
+      },
+    );
+    setState(() {});
+  }
+
+  // Toggle listening on / off
+  Future<void> _toggleListening() async {
+    if (!_speechAvailable) {
+      setState(
+        () => _errorMessage = 'Microphone not available on this device.',
+      );
+      return;
+    }
+
+    if (_isListening) {
+      // ── Stop listening ───────────────────────────────────────────────────
+      await _speech.stop();
+      setState(() => _isListening = false);
+
+      // Auto-translate what was captured
+      if (_inputText.trim().isNotEmpty) {
+        await _onTranslate();
+      }
+    } else {
+      // ── Start listening ──────────────────────────────────────────────────
+      setState(() {
+        _isListening = true;
+        _errorMessage = '';
+        _outputText = '';
+        _inputCtrl.clear();
+        _inputText = '';
+      });
+
+      await _speech.listen(
+        onResult: (result) {
+          setState(() {
+            _inputText = result.recognizedWords;
+            _inputCtrl.text = result.recognizedWords;
+            // Move cursor to end of text
+            _inputCtrl.selection = TextSelection.fromPosition(
+              TextPosition(offset: _inputCtrl.text.length),
+            );
+          });
+        },
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
+        localeId: 'en_US',
+        listenMode: stt.ListenMode.confirmation,
+      );
+    }
+  }
+
+  @override
   void dispose() {
     _inputCtrl.dispose();
+    _speech.stop();
     super.dispose();
   }
 
@@ -410,7 +480,10 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         color: kInputBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kSurface),
+        border: Border.all(
+          color: _isListening ? Colors.redAccent.withOpacity(0.6) : kSurface,
+          width: _isListening ? 1.5 : 1.0,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,20 +506,60 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 8),
           Row(
             children: [
-              _actionIcon(Icons.mic_none_rounded, onTap: () {}),
-              const SizedBox(width: 14),
-              _actionIcon(Icons.desktop_mac_outlined, onTap: () {}),
-              const Spacer(),
+              // ── Mic button — pulses red when listening ──────────────────
               GestureDetector(
-                onTap: _onTranslate,
-                child: Container(
+                onTap: _toggleListening,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   width: 34,
                   height: 34,
-                  decoration: const BoxDecoration(
-                    color: kAccent,
+                  decoration: BoxDecoration(
+                    color: _isListening
+                        ? Colors.redAccent.withOpacity(0.15)
+                        : Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: _isListening
+                        ? Border.all(color: Colors.redAccent, width: 1.5)
+                        : null,
+                  ),
+                  child: Icon(
+                    _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                    color: _isListening ? Colors.redAccent : kAccent,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              // ── Listening status text ────────────────────────────────────
+              if (_isListening)
+                Expanded(
+                  child: Text(
+                    'Listening...',
+                    style: TextStyle(
+                      color: Colors.redAccent.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
+                  ),
+                )
+              else
+                _actionIcon(Icons.desktop_mac_outlined, onTap: () {}),
+              const Spacer(),
+              // ── Send button — disabled while listening ───────────────────
+              GestureDetector(
+                onTap: _isListening ? null : _onTranslate,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: _isListening ? kSurface : kAccent,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.send_rounded, color: kBg, size: 16),
+                  child: Icon(
+                    Icons.send_rounded,
+                    color: _isListening ? kText.withOpacity(0.3) : kBg,
+                    size: 16,
+                  ),
                 ),
               ),
             ],
