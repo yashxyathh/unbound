@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/language_selector_screen.dart';
+import 'services/translation_service.dart';
 
 // ─── Colour Palette ───────────────────────────────────────────────────────────
 const Color kBg = Color(0xFF091413); // darkest – app background
@@ -151,18 +152,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Change this once you add auth/profile
+  // Change this once you add auth/profile (Step 8)
   final String _userName = 'Yashasvi';
 
   String _fromLang = 'Select language';
   String _toLang = 'Select language';
   String _inputText = '';
   String _outputText = '';
+  bool _isLoading = false; // shows spinner while API call is running
+  String _errorMessage = ''; // shows error if translation fails
 
   final TextEditingController _inputCtrl = TextEditingController();
 
-  // Recent translations list
-  final List<Map<String, String>> _recent = const [
+  // Recent translations — will be replaced with storage in Step 6
+  final List<Map<String, String>> _recent = [
     {'pair': 'EN → TA', 'text': 'Hello world'},
     {'pair': 'EN → HI', 'text': 'Good morning'},
     {'pair': 'FR → EN', 'text': 'Bonjour'},
@@ -179,14 +182,47 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _onTranslate() {
-    // TODO: Replace with real translation API call (Step 5)
-    setState(() {
-      _outputText = _inputText.isEmpty
-          ? ''
-          : '[ Translation of "$_inputText" from $_fromLang to $_toLang ]';
-    });
+  Future<void> _onTranslate() async {
+    // Guard: nothing typed
+    if (_inputText.trim().isEmpty) return;
+
+    // Guard: language not selected
+    if (_fromLang == 'Select language' || _toLang == 'Select language') {
+      setState(() => _errorMessage = 'Please select both languages first.');
+      return;
+    }
+
     FocusScope.of(context).unfocus();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+      _outputText = '';
+    });
+
+    final result = await TranslationService.translate(
+      text: _inputText,
+      fromLang: _fromLang,
+      toLang: _toLang,
+    );
+
+    if (!mounted) return; // widget was disposed while waiting
+
+    setState(() {
+      _isLoading = false;
+
+      if (result.hasError) {
+        _errorMessage = result.errorMessage!;
+      } else {
+        _outputText = result.translatedText;
+        _errorMessage = '';
+
+        // Add to recent list (keep max 10, most recent first)
+        final fromCode = _fromLang.substring(0, 2).toUpperCase();
+        final toCode = _toLang.substring(0, 2).toUpperCase();
+        _recent.insert(0, {'pair': '$fromCode → $toCode', 'text': _inputText});
+        if (_recent.length > 10) _recent.removeLast();
+      }
+    });
   }
 
   @override
@@ -396,20 +432,73 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kSurface),
+        border: Border.all(
+          color: _errorMessage.isNotEmpty
+              ? Colors.redAccent.withOpacity(0.5)
+              : kSurface,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 60),
-            child: Text(
-              _outputText.isEmpty ? 'Translation appears here' : _outputText,
-              style: TextStyle(
-                color: _outputText.isEmpty ? kText.withOpacity(0.35) : kText,
-                fontSize: 14,
-              ),
-            ),
+            child: _isLoading
+                // ── Loading state ──────────────────────────────────────────
+                ? Row(
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: kAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Translating...',
+                        style: TextStyle(
+                          color: kText.withOpacity(0.5),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  )
+                : _errorMessage.isNotEmpty
+                // ── Error state ────────────────────────────────────────
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Colors.redAccent,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage,
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                // ── Normal / translated state ──────────────────────────
+                : Text(
+                    _outputText.isEmpty
+                        ? 'Translation appears here'
+                        : _outputText,
+                    style: TextStyle(
+                      color: _outputText.isEmpty
+                          ? kText.withOpacity(0.35)
+                          : kText,
+                      fontSize: 14,
+                    ),
+                  ),
           ),
           const SizedBox(height: 10),
           Row(
