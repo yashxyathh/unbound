@@ -82,7 +82,7 @@ class TranslationService {
     }
 
     // Guard: unknown language
-    final fromCode = kLangCodes[fromLang];
+    final fromCode = fromLang == 'Auto Detect' ? 'en' : kLangCodes[fromLang];
     final toCode = kLangCodes[toLang];
 
     if (fromCode == null || toCode == null) {

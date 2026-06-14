@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'screens/language_selector_screen.dart';
 import 'services/translation_service.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 // ─── Colour Palette ───────────────────────────────────────────────────────────
 const Color kBg = Color(0xFF091413); // darkest – app background
@@ -169,7 +170,9 @@ class _HomePageState extends State<HomePage> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
   bool _speechAvailable = false;
-
+  //── Voice output state ─────────────────────────────────────────────────────
+  final FlutterTts _tts = FlutterTts();
+  bool _isSpeaking = false;
   // Recent translations — will be replaced with storage in Step 6
   final List<Map<String, String>> _recent = [
     {'pair': 'EN → TA', 'text': 'Hello world'},
@@ -248,6 +251,24 @@ class _HomePageState extends State<HomePage> {
       },
     );
     setState(() {});
+    await _tts.setVolume(1.0);
+    await _tts.setSpeechRate(0.5);
+    await _tts.setPitch(1.0);
+  }
+
+  // speak method
+  Future<void> _speak() async {
+    if (_outputText.isEmpty) return;
+
+    if (_isSpeaking) {
+      await _tts.stop();
+      setState(() => _isSpeaking = false);
+      return;
+    }
+
+    setState(() => _isSpeaking = true);
+    await _tts.speak(_outputText);
+    setState(() => _isSpeaking = false);
   }
 
   // Toggle listening on / off
@@ -283,16 +304,15 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             _inputText = result.recognizedWords;
             _inputCtrl.text = result.recognizedWords;
-            // Move cursor to end of text
             _inputCtrl.selection = TextSelection.fromPosition(
               TextPosition(offset: _inputCtrl.text.length),
             );
           });
         },
-        listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 3),
-        localeId: 'en_US',
-        listenMode: stt.ListenMode.confirmation,
+        listenOptions: stt.SpeechListenOptions(
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 3),
+        ),
       );
     }
   }
@@ -301,6 +321,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _inputCtrl.dispose();
     _speech.stop();
+    _tts.stop();
     super.dispose();
   }
 
@@ -649,7 +670,10 @@ class _HomePageState extends State<HomePage> {
             children: [
               _actionIcon(Icons.copy_rounded, onTap: () {}),
               const SizedBox(width: 14),
-              _actionIcon(Icons.volume_up_outlined, onTap: () {}),
+              _actionIcon(
+                _isSpeaking ? Icons.stop_rounded : Icons.volume_up_outlined,
+                onTap: _speak,
+              ),
               const SizedBox(width: 14),
               _actionIcon(Icons.favorite_border_rounded, onTap: () {}),
             ],

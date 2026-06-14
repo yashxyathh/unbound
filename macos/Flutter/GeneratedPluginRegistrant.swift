@@ -5,8 +5,10 @@
 import FlutterMacOS
 import Foundation
 
-import speech_to_text_macos
+import flutter_tts
+import speech_to_text
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  SpeechToTextMacosPlugin.register(with: registry.registrar(forPlugin: "SpeechToTextMacosPlugin"))
+  FlutterTtsPlugin.register(with: registry.registrar(forPlugin: "FlutterTtsPlugin"))
+  SpeechToTextPlugin.register(with: registry.registrar(forPlugin: "SpeechToTextPlugin"))
 }
