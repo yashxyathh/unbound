@@ -7,12 +7,12 @@ import 'screens/history_screen.dart';
 import 'screens/saved_screen.dart';
 
 // ─── Colour Palette ───────────────────────────────────────────────────────────
-const Color kBg        = Color(0xFF091413); // darkest – app background
-const Color kSurface   = Color(0xFF285A48); // cards, chips, nav bar
-const Color kAccent    = Color(0xFF408A71); // buttons, active icons, highlights
-const Color kText      = Color(0xFFB0E4CC); // all text and icons
-const Color kInputBg   = Color(0xFF0F1F1D); // text-field fill
-const Color kCardBg    = Color(0xFF1A2F2B); // translation output card
+const Color kBg = Color(0xFF091413); // darkest – app background
+const Color kSurface = Color(0xFF285A48); // cards, chips, nav bar
+const Color kAccent = Color(0xFF408A71); // buttons, active icons, highlights
+const Color kText = Color(0xFFB0E4CC); // all text and icons
+const Color kInputBg = Color(0xFF0F1F1D); // text-field fill
+const Color kCardBg = Color(0xFF1A2F2B); // translation output card
 
 void main() {
   runApp(const TranslatorApp());
@@ -28,7 +28,7 @@ class TranslatorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: kBg,
-        fontFamily: 'Inter',         // add Inter to pubspec.yaml (see Step 1)
+        fontFamily: 'Inter', // add Inter to pubspec.yaml (see Step 1)
         colorScheme: const ColorScheme.dark(
           background: kBg,
           surface: kSurface,
@@ -39,7 +39,7 @@ class TranslatorApp extends StatelessWidget {
         ),
         textTheme: const TextTheme(
           bodyMedium: TextStyle(color: kText, fontSize: 14),
-          bodySmall:  TextStyle(color: kText, fontSize: 12),
+          bodySmall: TextStyle(color: kText, fontSize: 12),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
@@ -57,7 +57,10 @@ class TranslatorApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             borderSide: const BorderSide(color: kAccent, width: 1.5),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
       home: const MainScreen(),
@@ -79,9 +82,9 @@ class _MainScreenState extends State<MainScreen> {
   // Swap out placeholders as you build each page
   final List<Widget> _pages = const [
     HomePage(),
-    HistoryPage(),   // placeholder – build next
-    SavedPage(),     // placeholder – build next
-    ProfilePage(),   // placeholder – build next
+    HistoryPage(), // placeholder – build next
+    SavedPage(), // placeholder – build next
+    ProfilePage(), // placeholder – build next
   ];
 
   @override
@@ -94,10 +97,10 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildBottomNav() {
     const items = [
-      {'icon': Icons.home_rounded,          'label': 'Home'},
-      {'icon': Icons.history_rounded,       'label': 'History'},
-      {'icon': Icons.favorite_rounded,      'label': 'Saved'},
-      {'icon': Icons.person_rounded,        'label': 'Profile'},
+      {'icon': Icons.home_rounded, 'label': 'Home'},
+      {'icon': Icons.history_rounded, 'label': 'History'},
+      {'icon': Icons.favorite_rounded, 'label': 'Saved'},
+      {'icon': Icons.person_rounded, 'label': 'Profile'},
     ];
 
     return Container(
@@ -156,20 +159,20 @@ class _HomePageState extends State<HomePage> {
   // Change this once you add auth/profile (Step 8)
   final String _userName = 'Yashasvi';
 
-  String _fromLang     = 'Auto Detect';  // always auto, user cannot change this
-  String _toLang       = 'Select language';
-  String _inputText    = '';
-  String _outputText   = '';
-  bool   _isLoading    = false;   // shows spinner while API call is running
-  String _errorMessage = '';      // shows error if translation fails
-  bool   _isSaved      = false;   // whether current output is in favourites
+  String _fromLang = 'Auto Detect'; // always auto, user cannot change this
+  String _toLang = 'Select language';
+  String _inputText = '';
+  String _outputText = '';
+  bool _isLoading = false; // shows spinner while API call is running
+  String _errorMessage = ''; // shows error if translation fails
+  bool _isSaved = false; // whether current output is in favourites
 
   final TextEditingController _inputCtrl = TextEditingController();
 
   // ── Voice input state ─────────────────────────────────────────────────────
-  final stt.SpeechToText _speech     = stt.SpeechToText();
-  bool _isListening                  = false;
-  bool _speechAvailable              = false;
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+  bool _speechAvailable = false;
 
   // Recent translations — will be replaced with storage in Step 6
   final List<Map<String, String>> _recent = [
@@ -180,10 +183,10 @@ class _HomePageState extends State<HomePage> {
 
   void _clearAll() {
     setState(() {
-      _toLang      = 'Select language';
+      _toLang = 'Select language';
       _inputCtrl.clear();
-      _inputText   = '';
-      _outputText  = '';
+      _inputText = '';
+      _outputText = '';
       _errorMessage = '';
     });
   }
@@ -194,21 +197,23 @@ class _HomePageState extends State<HomePage> {
 
     // Guard: output language not selected
     if (_toLang == 'Select language') {
-      setState(() => _errorMessage = 'Please select a language to translate to.');
+      setState(
+        () => _errorMessage = 'Please select a language to translate to.',
+      );
       return;
     }
 
     FocusScope.of(context).unfocus();
     setState(() {
-      _isLoading    = true;
+      _isLoading = true;
       _errorMessage = '';
-      _outputText   = '';
+      _outputText = '';
     });
 
     final result = await TranslationService.translate(
-      text:     _inputText,
+      text: _inputText,
       fromLang: _fromLang,
-      toLang:   _toLang,
+      toLang: _toLang,
     );
 
     if (!mounted) return; // widget was disposed while waiting
@@ -219,22 +224,26 @@ class _HomePageState extends State<HomePage> {
       if (result.hasError) {
         _errorMessage = result.errorMessage!;
       } else {
-        _outputText   = result.translatedText;
+        _outputText = result.translatedText;
         _errorMessage = '';
-        _isSaved      = false; // new translation, not yet favourited
+        _isSaved = false; // new translation, not yet favourited
 
         // Save to persistent history
-        StorageService.saveToHistory(HistoryItem(
-          inputText:  _inputText,
-          outputText: result.translatedText,
-          fromLang:   _fromLang,
-          toLang:     _toLang,
-          timestamp:  DateTime.now(),
-        ));
+        StorageService.saveToHistory(
+          HistoryItem(
+            inputText: _inputText,
+            outputText: result.translatedText,
+            fromLang: _fromLang,
+            toLang: _toLang,
+            timestamp: DateTime.now(),
+          ),
+        );
 
         // Add to recent list (keep max 10, most recent first)
-        final fromCode = _fromLang == 'Auto Detect' ? 'AUTO' : _fromLang.substring(0, 2).toUpperCase();
-        final toCode   = _toLang.substring(0, 2).toUpperCase();
+        final fromCode = _fromLang == 'Auto Detect'
+            ? 'AUTO'
+            : _fromLang.substring(0, 2).toUpperCase();
+        final toCode = _toLang.substring(0, 2).toUpperCase();
         _recent.insert(0, {'pair': '$fromCode → $toCode', 'text': _inputText});
         if (_recent.length > 10) _recent.removeLast();
       }
@@ -257,10 +266,34 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
+  // intialize the save fucntion
+  Future<void> _toggleSave() async {
+    if (_outputText.isEmpty) {
+      return;
+    }
+    final item = SavedItem(
+      inputText: _inputText,
+      outputText: _outputText,
+      fromLang: _fromLang,
+      toLang: _toLang,
+      timestamp: DateTime.now(),
+    );
+
+    if (_isSaved) {
+      await StorageService.removeFavorite(item.uniqueKey);
+    } else {
+      await StorageService.saveToFavorites(item);
+    }
+
+    setState(() => _isSaved = !_isSaved);
+  }
+
   // Toggle listening on / off
   Future<void> _toggleListening() async {
     if (!_speechAvailable) {
-      setState(() => _errorMessage = 'Microphone not available on this device.');
+      setState(
+        () => _errorMessage = 'Microphone not available on this device.',
+      );
       return;
     }
 
@@ -276,11 +309,11 @@ class _HomePageState extends State<HomePage> {
     } else {
       // ── Start listening ──────────────────────────────────────────────────
       setState(() {
-        _isListening  = true;
+        _isListening = true;
         _errorMessage = '';
-        _outputText   = '';
+        _outputText = '';
         _inputCtrl.clear();
-        _inputText    = '';
+        _inputText = '';
       });
 
       await _speech.listen(
@@ -294,10 +327,10 @@ class _HomePageState extends State<HomePage> {
             );
           });
         },
-        listenFor:    const Duration(seconds: 30),
-        pauseFor:     const Duration(seconds: 3),
-        localeId:     'en_US',
-        listenMode:   stt.ListenMode.confirmation,
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
+        localeId: 'en_US',
+        listenMode: stt.ListenMode.confirmation,
       );
     }
   }
@@ -354,7 +387,11 @@ class _HomePageState extends State<HomePage> {
         ),
         Text(
           _userName,
-          style: const TextStyle(color: kText, fontSize: 22, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            color: kText,
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -378,7 +415,7 @@ class _HomePageState extends State<HomePage> {
           _toLang = result;
         }
         _inputCtrl.clear();
-        _inputText  = '';
+        _inputText = '';
         _outputText = '';
       });
     }
@@ -394,8 +431,15 @@ class _HomePageState extends State<HomePage> {
         Container(
           width: 38,
           height: 38,
-          decoration: const BoxDecoration(color: kSurface, shape: BoxShape.circle),
-          child: const Icon(Icons.arrow_forward_rounded, color: kAccent, size: 18),
+          decoration: const BoxDecoration(
+            color: kSurface,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.arrow_forward_rounded,
+            color: kAccent,
+            size: 18,
+          ),
         ),
         const SizedBox(width: 8),
         // ── Right chip: tappable, user picks output language ─────────────────
@@ -508,7 +552,9 @@ class _HomePageState extends State<HomePage> {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: _isListening ? Colors.redAccent.withOpacity(0.15) : Colors.transparent,
+                    color: _isListening
+                        ? Colors.redAccent.withOpacity(0.15)
+                        : Colors.transparent,
                     shape: BoxShape.circle,
                     border: _isListening
                         ? Border.all(color: Colors.redAccent, width: 1.5)
@@ -527,7 +573,10 @@ class _HomePageState extends State<HomePage> {
                 Expanded(
                   child: Text(
                     'Listening...',
-                    style: TextStyle(color: Colors.redAccent.withOpacity(0.8), fontSize: 12),
+                    style: TextStyle(
+                      color: Colors.redAccent.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
                   ),
                 )
               else
@@ -566,7 +615,9 @@ class _HomePageState extends State<HomePage> {
         color: kCardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _errorMessage.isNotEmpty ? Colors.redAccent.withOpacity(0.5) : kSurface,
+          color: _errorMessage.isNotEmpty
+              ? Colors.redAccent.withOpacity(0.5)
+              : kSurface,
         ),
       ),
       child: Column(
@@ -589,46 +640,56 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 10),
                       Text(
                         'Translating...',
-                        style: TextStyle(color: kText.withOpacity(0.5), fontSize: 14),
+                        style: TextStyle(
+                          color: kText.withOpacity(0.5),
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   )
                 : _errorMessage.isNotEmpty
-                    // ── Error state ────────────────────────────────────────
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.error_outline_rounded,
-                              color: Colors.redAccent, size: 16),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _errorMessage,
-                              style: const TextStyle(
-                                  color: Colors.redAccent, fontSize: 13),
-                            ),
+                // ── Error state ────────────────────────────────────────
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Colors.redAccent,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage,
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 13,
                           ),
-                        ],
-                      )
-                    // ── Normal / translated state ──────────────────────────
-                    : Text(
-                        _outputText.isEmpty ? 'Translation appears here' : _outputText,
-                        style: TextStyle(
-                          color: _outputText.isEmpty
-                              ? kText.withOpacity(0.35)
-                              : kText,
-                          fontSize: 14,
                         ),
                       ),
+                    ],
+                  )
+                // ── Normal / translated state ──────────────────────────
+                : Text(
+                    _outputText.isEmpty
+                        ? 'Translation appears here'
+                        : _outputText,
+                    style: TextStyle(
+                      color: _outputText.isEmpty
+                          ? kText.withOpacity(0.35)
+                          : kText,
+                      fontSize: 14,
+                    ),
+                  ),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              _actionIcon(Icons.copy_rounded,              onTap: () {}),
+              _actionIcon(Icons.copy_rounded, onTap: () {}),
               const SizedBox(width: 14),
-              _actionIcon(Icons.volume_up_outlined,        onTap: () {}),
+              _actionIcon(Icons.volume_up_outlined, onTap: () {}),
               const SizedBox(width: 14),
-              _actionIcon(Icons.favorite_border_rounded,   onTap: () {}),
+              _actionIcon(Icons.favorite_border_rounded, onTap: () {}),
             ],
           ),
         ],
@@ -639,8 +700,8 @@ class _HomePageState extends State<HomePage> {
   // ── Mode buttons ─────────────────────────────────────────────────────────
   Widget _buildModeButtons() {
     final modes = [
-      {'icon': Icons.mic_rounded,      'label': 'Voice'},
-      {'icon': Icons.camera_alt_rounded,'label': 'Camera'},
+      {'icon': Icons.mic_rounded, 'label': 'Voice'},
+      {'icon': Icons.camera_alt_rounded, 'label': 'Camera'},
       {'icon': Icons.chat_bubble_outline_rounded, 'label': 'Chat'},
     ];
     return Row(
@@ -659,8 +720,10 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Icon(m['icon'] as IconData, color: kText, size: 20),
                   const SizedBox(height: 4),
-                  Text(m['label'] as String,
-                      style: const TextStyle(color: kText, fontSize: 11)),
+                  Text(
+                    m['label'] as String,
+                    style: const TextStyle(color: kText, fontSize: 11),
+                  ),
                 ],
               ),
             ),
@@ -675,12 +738,14 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Recent',
-            style: TextStyle(
-              color: kText.withOpacity(0.7),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            )),
+        Text(
+          'Recent',
+          style: TextStyle(
+            color: kText.withOpacity(0.7),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -688,7 +753,10 @@ class _HomePageState extends State<HomePage> {
             children: _recent.map((item) {
               return Container(
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: kCardBg,
                   borderRadius: BorderRadius.circular(12),
@@ -697,15 +765,22 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item['pair']!,
-                        style: TextStyle(color: kText.withOpacity(0.5), fontSize: 10)),
+                    Text(
+                      item['pair']!,
+                      style: TextStyle(
+                        color: kText.withOpacity(0.5),
+                        fontSize: 10,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(item['text']!,
-                        style: const TextStyle(
-                          color: kText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        )),
+                    Text(
+                      item['text']!,
+                      style: const TextStyle(
+                        color: kText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -723,7 +798,10 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         width: 36,
         height: 36,
-        decoration: const BoxDecoration(color: kSurface, shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+          color: kSurface,
+          shape: BoxShape.circle,
+        ),
         child: Icon(icon, color: kText, size: 18),
       ),
     );
@@ -741,7 +819,8 @@ class _HomePageState extends State<HomePage> {
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});
   @override
-  Widget build(BuildContext context) => const _PlaceholderPage(title: 'History');
+  Widget build(BuildContext context) =>
+      const _PlaceholderPage(title: 'History');
 }
 
 class SavedPage extends StatelessWidget {
@@ -753,7 +832,8 @@ class SavedPage extends StatelessWidget {
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
   @override
-  Widget build(BuildContext context) => const _PlaceholderPage(title: 'Profile');
+  Widget build(BuildContext context) =>
+      const _PlaceholderPage(title: 'Profile');
 }
 
 class _PlaceholderPage extends StatelessWidget {
@@ -765,7 +845,11 @@ class _PlaceholderPage extends StatelessWidget {
     return Center(
       child: Text(
         title,
-        style: const TextStyle(color: kText, fontSize: 22, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: kText,
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
