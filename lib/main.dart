@@ -4,6 +4,7 @@ import 'screens/language_selector_screen.dart';
 import 'services/translation_service.dart';
 import 'services/storage_service.dart';
 import 'screens/history_screen.dart';
+import 'screens/saved_screen.dart';
 
 // ─── Colour Palette ───────────────────────────────────────────────────────────
 const Color kBg        = Color(0xFF091413); // darkest – app background
@@ -161,6 +162,7 @@ class _HomePageState extends State<HomePage> {
   String _outputText   = '';
   bool   _isLoading    = false;   // shows spinner while API call is running
   String _errorMessage = '';      // shows error if translation fails
+  bool   _isSaved      = false;   // whether current output is in favourites
 
   final TextEditingController _inputCtrl = TextEditingController();
 
@@ -219,6 +221,16 @@ class _HomePageState extends State<HomePage> {
       } else {
         _outputText   = result.translatedText;
         _errorMessage = '';
+        _isSaved      = false; // new translation, not yet favourited
+
+        // Save to persistent history
+        StorageService.saveToHistory(HistoryItem(
+          inputText:  _inputText,
+          outputText: result.translatedText,
+          fromLang:   _fromLang,
+          toLang:     _toLang,
+          timestamp:  DateTime.now(),
+        ));
 
         // Add to recent list (keep max 10, most recent first)
         final fromCode = _fromLang == 'Auto Detect' ? 'AUTO' : _fromLang.substring(0, 2).toUpperCase();
