@@ -266,27 +266,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  // intialize the save fucntion
-  Future<void> _toggleSave() async {
-    if (_outputText.isEmpty) {
-      return;
-    }
-    final item = SavedItem(
-      inputText: _inputText,
-      outputText: _outputText,
-      fromLang: _fromLang,
-      toLang: _toLang,
-      timestamp: DateTime.now(),
-    );
 
-    if (_isSaved) {
-      await StorageService.removeFavorite(item.uniqueKey);
-    } else {
-      await StorageService.saveToFavorites(item);
-    }
-
-    setState(() => _isSaved = !_isSaved);
-  }
 
   // Toggle listening on / off
   Future<void> _toggleListening() async {
@@ -340,6 +320,25 @@ class _HomePageState extends State<HomePage> {
     _inputCtrl.dispose();
     _speech.stop();
     super.dispose();
+  }
+  Future<void> _toggleSave() async {
+    if (_outputText.isEmpty) return;
+
+    final item = SavedItem(
+      inputText:  _inputText,
+      outputText: _outputText,
+      fromLang:   _fromLang,
+      toLang:     _toLang,
+      timestamp:  DateTime.now(),
+    );
+
+    if (_isSaved) {
+      await StorageService.removeFavorite(item.uniqueKey);
+    } else {
+      await StorageService.saveToFavorites(item);
+    }
+
+    setState(() => _isSaved = !_isSaved);
   }
 
   @override
@@ -689,7 +688,12 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(width: 14),
               _actionIcon(Icons.volume_up_outlined, onTap: () {}),
               const SizedBox(width: 14),
-              _actionIcon(Icons.favorite_border_rounded, onTap: () {}),
+              _actionIcon(
+                _isSaved
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                onTap: _toggleSave,
+              ),
             ],
           ),
         ],
@@ -826,7 +830,7 @@ class HistoryPage extends StatelessWidget {
 class SavedPage extends StatelessWidget {
   const SavedPage({super.key});
   @override
-  Widget build(BuildContext context) => const _PlaceholderPage(title: 'Saved');
+  Widget build(BuildContext context) => const SavedScreen();
 }
 
 class ProfilePage extends StatelessWidget {
